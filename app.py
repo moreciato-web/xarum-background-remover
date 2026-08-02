@@ -5,14 +5,13 @@ import secrets
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from PIL import Image, UnidentifiedImageError
-from rembg import new_session, remove
 from starlette.concurrency import run_in_threadpool
 
 
 MAX_IMAGE_BYTES = 15 * 1024 * 1024
 MAX_IMAGE_PIXELS = 40_000_000
 SERVICE_TOKEN = os.environ.get("SERVICE_TOKEN", "")
-MODEL_NAME = os.environ.get("REMBG_MODEL", "u2netp")
+MODEL_NAME = os.environ.get("REMBG_MODEL", "u2netp") or "u2netp"
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 process_lock = asyncio.Lock()
@@ -22,6 +21,8 @@ model_session = None
 def get_model_session():
     global model_session
     if model_session is None:
+        from rembg import new_session
+
         model_session = new_session(MODEL_NAME)
     return model_session
 
@@ -38,6 +39,8 @@ def validate_image(payload: bytes) -> None:
 
 
 def remove_background(payload: bytes) -> bytes:
+    from rembg import remove
+
     return remove(
         payload,
         session=get_model_session(),
