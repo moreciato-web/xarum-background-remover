@@ -2,6 +2,7 @@ import asyncio
 import io
 import os
 import secrets
+import threading
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from PIL import Image, UnidentifiedImageError
@@ -16,15 +17,25 @@ MODEL_NAME = os.environ.get("REMBG_MODEL", "u2netp") or "u2netp"
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 process_lock = asyncio.Lock()
 model_session = None
+model_lock = threading.Lock()
 
 
 def get_model_session():
     global model_session
-    if model_session is None:
+    if model_session is not None:
+        return model_session
+    with model_lock:
+        if model_session is not None:
+            return model_session
         from rembg import new_session
 
         model_session = new_session(MODEL_NAME)
     return model_session
+
+
+@app.on_event("startup")
+def preload_model():
+    threading.Thread(target=get_model_session, name="model-preload", daemon=True).start()
 
 
 def validate_image(payload: bytes) -> None:
