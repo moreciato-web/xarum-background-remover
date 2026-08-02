@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: xarum-background-remover
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: SERVICE_TOKEN
+        generateValue: true
+      - key: REMBG_MODEL
+        value: u2netp
