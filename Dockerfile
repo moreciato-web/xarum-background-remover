@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
 RUN mkdir -p "$U2NET_HOME" \
-    && python -c "from rembg import new_session; new_session('u2netp')" \
+    && python -c "import urllib.request; urllib.request.urlretrieve('https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx', '/app/.u2net/u2netp.onnx')" \
     && useradd --create-home --uid 10001 appuser \
     && chown -R appuser:appuser /app
 
